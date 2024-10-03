@@ -1,6 +1,7 @@
 #![allow(clippy::redundant_closure_call)]
 //|> clippy false positive: https://github.com/rust-lang/rust-clippy/issues/1553
 
+use::std::process;
 use crate::generic64::{storage::StorageManager, Assembler, CallConv, RegTrait};
 use crate::{
     pointer_layouts, single_register_floats, single_register_int_builtins,
@@ -1847,6 +1848,15 @@ impl Assembler<AArch64GeneralReg, AArch64FloatReg> for AArch64Assembler {
     }
 
     #[inline(always)]
+
+    fn roc_todo(description: &str, tip: Option<&str>, issue_link: Url) {
+        eprintln!("<red>Error<\\red>: Unimplemented feature\n\n    {}\n\n    Tip: {}\n\n    Issue: {}", 
+            description, 
+            tip.unwrap_or("No tips available"), 
+            issue_link);
+        process::exit(1);
+    }
+
     fn sub_reg64_reg64_imm32(
         buf: &mut Vec<'_, u8>,
         dst: AArch64GeneralReg,
@@ -1858,9 +1868,14 @@ impl Assembler<AArch64GeneralReg, AArch64FloatReg> for AArch64Assembler {
         } else if imm32 < 0xFFF {
             sub_reg64_reg64_imm12(buf, dst, src, imm32 as u16);
         } else {
-            todo!("immediate subtractions with values greater than 12bits");
+            roc_todo(
+                "Immediate subtractions with values exceeding 12 bits are not yet supported.",
+                Some("You probably hit this in the REPL. Try building/running with a roc file, e.g.: `roc myFile.roc`."),
+                "https://github.com/roc-lang/roc/issues/6812"
+            );
         }
     }
+
     #[inline(always)]
     fn sub_reg64_reg64_reg64(
         buf: &mut Vec<'_, u8>,
